@@ -20,57 +20,49 @@ function initMap() {
 }
 
 function calculateAndDisplayRoute(origin, destination, map) {
+  
   // Get default transit route
   const ds = new google.maps.DirectionsService;
+  
   ds.route(
     {
       origin,
       destination,
       travelMode: 'TRANSIT'
     },
-    (response, status) => {
+    async (response, status) => {
       if (status === 'OK') {
         
-        // Break out walking steps
-        const walking = getWalkingSteps(response);
+        // Initialize current time as current time
+        let departure_time = new Date();
         
-        // Get biking directions for walking steps
+        // Intialize empty array of new routes
+        const routes = [];
         
-        // Create array of promises
-        const promises = [];
-        walking.forEach(leg => {
+        // Iterate through steps in response
+        for (step of response.routes[0].legs[0].steps) {
+          // If the travel_mode is walking, set travel mode to biking
+          const travelMode = step.travel_mode === 'WALKING' ? 'BICYCLING' : 'TRANSIT';
+        
+          // Push route to routes
+          try {
+            routes.push(await getRoute(step.start_location, step.end_location, departure_time, travelMode));
+            
+          } 
+          catch (err) {
+            console.log(err);
+          }
           
-          // Push a promise into an array that resolves with the response
-          promises.push(new Promise((resolve, reject) => {
-            ds.route(
-              {
-                origin: leg.start_location,
-                destination: leg.end_location,
-                travelMode: 'BICYCLING'
-              },
-              (response, status) => {
-                if (status === 'OK') {
-
-                  // Plot biking directions
-                  const dr = new google.maps.DirectionsRenderer;
-                  dr.setMap(map);
-                  dr.setDirections(response);
-                  resolve(response);
-
-                } else {
-                  reject(response);
-                }
-              }
-            );
-          }));
-          
-          // Plot biking direcions
-        })
+        };
         
+        console.log(routes);
         
-        // Get new transit directions starting when arriving at end of first biking leg
-        
-        // Plot transit directions
+        // Plot routes
+        routes.forEach(route => {
+          const dr = new google.maps.DirectionsRenderer();
+          dr.setMap(map);
+          dr.setDirections(route);
+        });
         
       } else {
         window.alert('Directions request failed due to ' + status);
@@ -82,5 +74,34 @@ function calculateAndDisplayRoute(origin, destination, map) {
 function getWalkingSteps(response) {
   return response.routes[0].legs[0].steps.filter(step => {
     return step.travel_mode === 'WALKING';
+  });
+}
+
+
+// Input:
+  // origin (latlng)
+  // destination (latlng)
+  // departure_time (dateTime)
+  // transit_mode (string, 'BICYCLING' or 'TRANSIT');
+// Output:
+  // promise that resolves to a route
+const getRoute = (origin, destination, departure_time, travelMode) => {
+  // Get default transit route
+  const ds = new google.maps.DirectionsService;
+  
+  return new Promise((resolve, reject) => {
+    
+    const request = {
+      origin,
+      destination,
+      //departure_time,
+      travelMode
+    }
+    
+    ds.route(request, (response, status) => {
+      if (status === 'OK') resolve(response);
+      else reject(response);
+    });
+    
   });
 }
