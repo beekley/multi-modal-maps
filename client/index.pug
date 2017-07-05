@@ -4,8 +4,8 @@ html
     title My Site
     script(src='./client/script.js')
   body
-    p #{name}'s Pug source code!
+    p M3! By #{name}!
     p Using key: #{gmapkey}
-    div#container(style={width: '100%', height: '800px'})
+    div#container(style={width: '100%', height: '500px'})
       div#map(style={width: '100%', height: '100%'})
     script(async, defer, src=`https://maps.googleapis.com/maps/api/js?key=${gmapkey}&callback=initMap`)
