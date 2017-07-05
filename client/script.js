@@ -1,8 +1,6 @@
-// Dev case
-//const origin = '2050 S Bentley Ave Los Angeles 90025';
-//const dest = '1906 Ocean Ave, Santa Monica, CA';
-//const alt = '5300 Beethoven Street, Los Angeles, CA 90066';
-const verbose = true;
+// Globals
+const verbose = false;
+const renderers = [];
 let map;
 
 function initMap() {
@@ -18,6 +16,10 @@ function initMap() {
 
 // Updates map with given directions
 const onChangeHandler = function() {
+  
+  // Clear the map first
+  clearMap();
+  
   calculateAndDisplayRoute(document.getElementById('origin').value, document.getElementById('destination').value, map);
 };
 
@@ -57,10 +59,11 @@ function calculateAndDisplayRoute(origin, destination, map) {
           const dr = new google.maps.DirectionsRenderer();
           dr.setMap(map);
           dr.setDirections(route);
+          renderers.push(dr);
         });
         
         // Update map
-        // Something is asynchronouse above this that's causing problems...
+        // Something is asynchronous above this that's causing problems...
         setTimeout(() => {showRoutes(response, map)}, 0);
         
         // Get durations
@@ -77,6 +80,13 @@ function calculateAndDisplayRoute(origin, destination, map) {
       }
     }
   );
+}
+
+// Clears the map of directions
+const clearMap = () => {
+  while (renderers.length > 0) {
+    renderers.pop().setMap(null);
+  }
 }
 
 // Returns a duration (in mins) for the given set of routes
@@ -105,9 +115,8 @@ const getRoutes = async (response, transitOptions) => {
       // If route contains any walking steps, getRoutes on that route and push into routes
       if (route.routes[0].legs[0].steps.filter(step => {return step.travel_mode === 'WALKING'}).length) {
         try {
-          console.log('Route contains walking:', route);
+          if (verbose) console.log('Route contains walking:', route);
           const recurseRoutes = await getRoutes(route);
-          console.log(recurseRoutes);
           recurseRoutes.forEach(r => routes.push(r));
         }
         catch (err) {
