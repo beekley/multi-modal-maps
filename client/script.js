@@ -3,12 +3,17 @@ const verbose = false;
 const renderers = [];
 let map;
 
+const DirectionsRendererOptions = {
+  suppressBicyclingLayer: true,
+  suppressMarkers: true,
+}
+
 function initMap() {
   
   // Render the map
   map = new google.maps.Map(document.getElementById('map'), {
     zoom: 7,
-    center: {lat: 41.85, lng: -87.65}
+    center: {lat: 34.0522, lng: -118.2437}
   });
   
   //onChangeHandler();
@@ -37,18 +42,27 @@ function calculateAndDisplayRoute(origin, destination, map) {
     async (response, status) => {
       if (status === 'OK') {
         
-        // Get routes
-        const basicRoutes = await getRoutes(response);
+        let basicRoutes;
+        let altRoutes;
         
-        // Get routes, preferring rail. Run again to replace walking on new route
-        const altRoutes = await getRoutes(response, {
-          modes: ['RAIL','SUBWAY','TRAIN','TRAM'],
-          routingPreference: 'FEWER_TRANSFERS'
-        });
+        try {
+          // Get routes
+          basicRoutes = await getRoutes(response);
+
+          // Get routes, preferring rail. Run again to replace walking on new route
+          altRoutes = await getRoutes(response, {
+            modes: ['RAIL','SUBWAY','TRAIN','TRAM'],
+            routingPreference: 'FEWER_TRANSFERS'
+          });
+        }
+        catch (err) {
+          console.log('Error:', err, '(altRoute likely failed)');
+        }
+        
         
         // Determine which route is faster
         const basicDuration = getDuration(basicRoutes);
-        const altDuration = getDuration(altRoutes);
+        const altDuration = altRoutes ? getDuration(altRoutes) : Infinity;
         const routes = basicDuration <= altDuration ? basicRoutes : altRoutes;
         
         if (verbose) console.log('Alt duration (mins)', altDuration);
@@ -56,7 +70,7 @@ function calculateAndDisplayRoute(origin, destination, map) {
         
         // Plot routes
         routes.forEach(route => {
-          const dr = new google.maps.DirectionsRenderer();
+          const dr = new google.maps.DirectionsRenderer(DirectionsRendererOptions);
           dr.setMap(map);
           dr.setDirections(route);
           renderers.push(dr);
@@ -72,11 +86,11 @@ function calculateAndDisplayRoute(origin, destination, map) {
         }, 0) / 60);
         const newDuration = getDuration(routes);
         
-        console.log('Original duration (mins)', originalDuration);
-        console.log('New duration (mins)', newDuration);
+        // SHow durations on page
+        showDurations(origin, destination, originalDuration, newDuration);
         
       } else {
-        window.alert('Directions request failed due to ' + status);
+        console.log(status);
       }
     }
   );
@@ -179,4 +193,26 @@ const showRoutes = (response, map) => {
   bounds.extend(response.routes[0].legs[0].start_location);
   bounds.extend(response.routes[0].legs[0].end_location);
   map.fitBounds(bounds);
+}
+
+// Displays durations for different modes
+const showDurations = async (origin, destination, transit, multi) => {
+  
+  // Get driving duration
+  let driving;
+  try {
+    driving = Math.round((await getRoute(origin, destination, 'DRIVING')).routes[0].legs.reduce((dur, leg) => {
+      return dur + leg.duration.value;
+    }, 0) / 60);
+  }
+  catch (err) {
+    throw(err);
+    console.log(err);
+  }
+  
+  // Update DOM
+  document.querySelector('#driving .val').innerHTML = ` ${driving} mins`;
+  document.querySelector('#transit .val').innerHTML = ` ${transit} mins`;
+  document.querySelector('#multi .val').innerHTML = ` ${multi} mins`;
+  
 }

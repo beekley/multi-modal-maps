@@ -3,11 +3,23 @@ html
   head
     title My Site
     script(src='./client/script.js')
+    link(rel='stylesheet', href='./client/style.css', type='text/css')
   body
     p M3: Multi-Modal-Maps
-    input#origin(type='text', name='origin', value='2050 S Bentley Ave Los Angeles 90025')
-    input#destination(type='text', name='destination', value='1906 Ocean Ave, Santa Monica, CA')
-    button(onclick='onChangeHandler()') Route!
-    div#container(style={width: '100%', height: '500px'})
-      div#map(style={width: '100%', height: '100%'})
+    div#inputs
+      input#origin(type='text', name='origin', placeholder='origin')
+      input#destination(type='text', name='destination', placeholder='destination')
+      button(onclick='onChangeHandler()') Route!
+    div#results
+      div#driving
+        p Driving Duration:
+        p.val
+      div#transit
+        p Transit Duration:
+        p.val
+      div#multi
+        p Transit+Bike Duration:
+        p.val
+    div#container
+      div#map
     script(async, defer, src=`https://maps.googleapis.com/maps/api/js?key=${gmapkey}&callback=initMap`)
