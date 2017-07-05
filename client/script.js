@@ -2,7 +2,7 @@
 //const origin = '2050 S Bentley Ave Los Angeles 90025';
 //const dest = '1906 Ocean Ave, Santa Monica, CA';
 //const alt = '5300 Beethoven Street, Los Angeles, CA 90066';
-const verbose = false;
+const verbose = true;
 let map;
 
 function initMap() {
@@ -36,16 +36,21 @@ function calculateAndDisplayRoute(origin, destination, map) {
       if (status === 'OK') {
         
         // Get routes
-        const routes = await getRoutes(response);
+        const basicRoutes = await getRoutes(response);
         
         // Get routes, preferring rail. Run again to replace walking on new route
-        const railRoutes = await getRoutes(response, {
+        const altRoutes = await getRoutes(response, {
           modes: ['RAIL','SUBWAY','TRAIN','TRAM'],
           routingPreference: 'FEWER_TRANSFERS'
         });
         
-        console.log(railRoutes);
-        console.log('Alt duration (mins)', getDuration(railRoutes));
+        // Determine which route is faster
+        const basicDuration = getDuration(basicRoutes);
+        const altDuration = getDuration(altRoutes);
+        const routes = basicDuration <= altDuration ? basicRoutes : altRoutes;
+        
+        if (verbose) console.log('Alt duration (mins)', altDuration);
+        if (verbose) console.log('Basic duration (mins)', basicDuration);
         
         // Plot routes
         routes.forEach(route => {
@@ -94,9 +99,25 @@ const getRoutes = async (response, transitOptions) => {
     // Push route to routes
     try {
       
-      // 
+      // Get route
+      const route = await getRoute(step.start_location, step.end_location, travelMode, transitOptions);
       
-      routes.push(await getRoute(step.start_location, step.end_location, travelMode, transitOptions));
+      // If route contains any walking steps, getRoutes on that route and push into routes
+      if (route.routes[0].legs[0].steps.filter(step => {return step.travel_mode === 'WALKING'}).length) {
+        try {
+          console.log('Route contains walking:', route);
+          const recurseRoutes = await getRoutes(route);
+          console.log(recurseRoutes);
+          recurseRoutes.forEach(r => routes.push(r));
+        }
+        catch (err) {
+          console.log(err);
+          throw(err);
+        }
+      }
+      
+      // Else push into routes
+      else routes.push(route);
     } 
     catch (err) {
       throw(err);
@@ -148,6 +169,5 @@ const showRoutes = (response, map) => {
   const bounds = new google.maps.LatLngBounds();
   bounds.extend(response.routes[0].legs[0].start_location);
   bounds.extend(response.routes[0].legs[0].end_location);
-  console.log(bounds);
   map.fitBounds(bounds);
 }
