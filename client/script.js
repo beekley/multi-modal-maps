@@ -47,13 +47,11 @@ function calculateAndDisplayRoute(origin, destination, map) {
           // Push route to routes
           try {
             routes.push(await getRoute(step.start_location, step.end_location, departure_time, travelMode));
-            
           } 
           catch (err) {
             console.log(err);
           }
-          
-        };
+        }
         
         console.log(routes);
         
@@ -63,6 +61,15 @@ function calculateAndDisplayRoute(origin, destination, map) {
           dr.setMap(map);
           dr.setDirections(route);
         });
+        
+        // Get durations
+        console.log('Original duration (mins)', Math.round(response.routes[0].legs.reduce((dur, leg) => {
+          return dur + leg.duration.value;
+        }, 0) / 60));
+        
+        console.log('New duration (mins)', Math.round(routes.reduce((dur, route) => {
+          return dur + route.routes[0].legs[0].duration.value;
+        }, 0) / 60));
         
       } else {
         window.alert('Directions request failed due to ' + status);
@@ -94,8 +101,8 @@ const getRoute = (origin, destination, departure_time, travelMode) => {
     const request = {
       origin,
       destination,
-      //departure_time,
-      travelMode
+      travelMode,
+      //transit_routing_preference: 'fewer_transfers',
     }
     
     ds.route(request, (response, status) => {
