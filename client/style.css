@@ -30,6 +30,7 @@
 
 
 #results div p {
+  font-family: sans-serif;
   margin: 0px;
   display: inline-block;
 }

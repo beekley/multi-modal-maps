@@ -86,8 +86,15 @@ function calculateAndDisplayRoute(origin, destination, map) {
         }, 0) / 60);
         const newDuration = getDuration(routes);
         
-        // SHow durations on page
-        showDurations(origin, destination, originalDuration, newDuration);
+        // Show durations on page
+        try {
+          // delay for query limit
+          setTimeout(() => {showDurations(origin, destination, originalDuration, newDuration)},500);
+        }
+        catch (err) {
+          console.log(err);
+        }
+       
         
       } else {
         console.log(status);
@@ -172,6 +179,7 @@ const getRoute = (origin, destination, travelMode, transitOptions) => {
     }
     
     ds.route(request, (response, status) => {
+      if (status == 'OVER_QUERY_LIMIT') reject(status);
     
       if (verbose) console.log(`Getting ${travelMode} leg:`, request);
       if (verbose) console.log('Response:', response);
@@ -206,7 +214,19 @@ const showDurations = async (origin, destination, transit, multi) => {
     }, 0) / 60);
   }
   catch (err) {
-    throw(err);
+    throw err;
+    console.log(err);
+  }
+  
+  // Get bike duration
+  let bike;
+  try {
+    bike = Math.round((await getRoute(origin, destination, 'BICYCLING')).routes[0].legs.reduce((dur, leg) => {
+      return dur + leg.duration.value;
+    }, 0) / 60);
+  }
+  catch (err) {
+    throw err;
     console.log(err);
   }
   
@@ -214,5 +234,6 @@ const showDurations = async (origin, destination, transit, multi) => {
   document.querySelector('#driving .val').innerHTML = ` ${driving} mins`;
   document.querySelector('#transit .val').innerHTML = ` ${transit} mins`;
   document.querySelector('#multi .val').innerHTML = ` ${multi} mins`;
+  document.querySelector('#bike .val').innerHTML = ` ${bike} mins`;
   
 }
