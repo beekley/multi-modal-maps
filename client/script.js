@@ -57,6 +57,7 @@ function calculateAndDisplayRoute(origin, destination, map) {
         }
         catch (err) {
           console.log('Error:', err, '(altRoute likely failed)');
+          notify(err);
         }
         
         
@@ -93,11 +94,13 @@ function calculateAndDisplayRoute(origin, destination, map) {
         }
         catch (err) {
           console.log(err);
+          notify(err);
         }
        
         
       } else {
         console.log(status);
+        notify(status);
       }
     }
   );
@@ -236,4 +239,8 @@ const showDurations = async (origin, destination, transit, multi) => {
   document.querySelector('#multi .val').innerHTML = ` ${multi} mins`;
   document.querySelector('#bike .val').innerHTML = ` ${bike} mins`;
   
+}
+
+const notify = (msg) => {
+  Materialize.toast('Error: ' + msg, 8000, 'red darken-1');
 }

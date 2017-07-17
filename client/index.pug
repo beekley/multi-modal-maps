@@ -2,7 +2,6 @@ doctype html
 html
   head
     title My Site
-    script(src='./client/script.js')
     link(rel='stylesheet', href='./client/style.css', type='text/css')
     
     // jQuery (required for Materialize)
@@ -15,6 +14,9 @@ html
     link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.99.0/css/materialize.min.css", type='text/css')
     script(src='https://cdnjs.cloudflare.com/ajax/libs/materialize/0.99.0/js/materialize.min.js')
     
+    // Page script
+    script(src='./client/script.js')
+    
   body
     div#container
       div#nav.card
@@ -24,9 +26,9 @@ html
             input#origin(type='text', name='origin', placeholder='origin')
             input#destination(type='text', name='destination', placeholder='destination')
           div.card-action
-            a.waves-effect(onclick='onChangeHandler()') Route!
+            a(onclick='onChangeHandler()') Route!
           div.card-action
-            a.waves-effect.activator Durations
+            a.activator Durations
             
         ul#results.collection.with-header.card-reveal(style='margin-top:0')
           li.collection-header
@@ -47,6 +49,8 @@ html
              span.val
             
       div#map
-      div#footer
-        a(href='https://github.com/beekley/multi-modal-maps') github
+      div#info
+        div.chip.white
+          img(src='./client/gh32.png')
+          a(href='https://github.com/beekley/multi-modal-maps' target='_blank') beekley/multi-modal-maps
     script(async, defer, src=`https://maps.googleapis.com/maps/api/js?key=${gmapkey}&callback=initMap`)
