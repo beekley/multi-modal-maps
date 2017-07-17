@@ -4,25 +4,49 @@ html
     title My Site
     script(src='./client/script.js')
     link(rel='stylesheet', href='./client/style.css', type='text/css')
+    
+    // jQuery (required for Materialize)
+    script(src='https://code.jquery.com/jquery-2.1.1.min.js')
+    
+    // Material Icons
+    link(href='https://fonts.googleapis.com/icon?family=Material+Icons', rel='stylesheet')
+    
+    // Materialize
+    link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.99.0/css/materialize.min.css", type='text/css')
+    script(src='https://cdnjs.cloudflare.com/ajax/libs/materialize/0.99.0/js/materialize.min.js')
+    
   body
-    p M3: Multi-Modal-Maps
-    div#inputs
-      input#origin(type='text', name='origin', placeholder='origin')
-      input#destination(type='text', name='destination', placeholder='destination')
-      button(onclick='onChangeHandler()') Route!
-    div#results
-      div#driving
-        p Driving Duration:
-        p.val
-      div#transit
-        p Transit Duration:
-        p.val
-      div#bike
-        p Bike Duration:
-        p.val
-      div#multi
-        p Transit+Bike Duration:
-        p.val
     div#container
+      div#nav.card
+      
+        div.card-stacked
+          div#inputs.card-content
+            input#origin(type='text', name='origin', placeholder='origin')
+            input#destination(type='text', name='destination', placeholder='destination')
+          div.card-action
+            a.waves-effect(onclick='onChangeHandler()') Route!
+          div.card-action
+            a.waves-effect.activator Durations
+            
+        ul#results.collection.with-header.card-reveal(style='margin-top:0')
+          li.collection-header
+            span.card-title.grey-text.text-darken-4 Results
+              i.material-icons.right close
+            
+          li#driving.collection-item
+            span Driving Duration:
+              span.val
+          li#transit.collection-item
+            span Transit Duration:
+              span.val
+          li#bike.collection-item
+            span Bike Duration:
+              span.val
+          li#multi.collection-item
+            span Transit+Bike Duration:
+             span.val
+            
       div#map
+      div#footer
+        a(href='https://github.com/beekley/multi-modal-maps') github
     script(async, defer, src=`https://maps.googleapis.com/maps/api/js?key=${gmapkey}&callback=initMap`)
