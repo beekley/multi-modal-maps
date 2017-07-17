@@ -24,12 +24,14 @@ body {
   height: 100%
 }
 
-#footer {
+#info {
   z-index: 100;
   position: absolute;
-  bottom: 0;
-  background-color: #fff;
-  border: 1px #000 Solid;
   padding: 5px;
-  left: 50%;
+  top: 0;
+  right: 0;
+}
+
+a:hover {
+  cursor:pointer;
 }
